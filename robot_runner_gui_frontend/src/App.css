@@ -402,30 +402,17 @@
   min-height: 280px;
 }
 
-.pieRing {
+/* Recharts mount: fixed donut-like area so ResponsiveContainer has a size */
+.pieChartFrame {
   width: 240px;
   height: 240px;
   border-radius: 999px;
-  background: conic-gradient(
-    rgba(34, 197, 94, 0.85) 0deg 210deg,
-    rgba(239, 68, 68, 0.85) 210deg 260deg,
-    rgba(37, 99, 235, 0.85) 260deg 320deg,
-    rgba(107, 114, 128, 0.75) 320deg 360deg
-  );
   box-shadow: var(--shadow-md);
   border: 8px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.55);
 }
 
-.pieRing::after {
-  content: "";
-  position: absolute;
-  width: 154px;
-  height: 154px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: inset 0 1px 0 rgba(17, 24, 39, 0.05);
-}
-
+/* Keep the center label as the "donut hole" overlay */
 .pieCenterLabel {
   position: absolute;
   display: grid;
@@ -435,6 +422,7 @@
   height: 154px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 1px 0 rgba(17, 24, 39, 0.05);
 }
 
 .pieCenterNumber {
@@ -537,6 +525,50 @@
   font-size: 12px;
 }
 
+.logsLink {
+  color: rgba(37, 99, 235, 1);
+  text-decoration: none;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.25);
+  padding-bottom: 1px;
+}
+
+.logsLink:hover {
+  border-bottom-color: rgba(37, 99, 235, 0.55);
+}
+
+.tableLegend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(17, 24, 39, 0.06);
+  background: rgba(249, 250, 251, 0.80);
+  color: rgba(17, 24, 39, 0.78);
+  font-size: 12px;
+}
+
+.tableLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.tableLegendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.tableLegendSwatchPass {
+  background: rgba(37, 99, 235, 0.95);
+}
+
+.tableLegendSwatchFail {
+  background: rgba(239, 68, 68, 0.95);
+}
+
 /* Badges */
 
 .badge {
@@ -596,12 +628,11 @@
     min-height: 240px;
   }
 
-  .pieRing {
+  .pieChartFrame {
     width: 220px;
     height: 220px;
   }
 
-  .pieRing::after,
   .pieCenterLabel {
     width: 148px;
     height: 148px;
