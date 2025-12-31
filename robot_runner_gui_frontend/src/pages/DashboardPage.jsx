@@ -1,118 +1,36 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 import SidebarProjects from "../ui/dashboard/SidebarProjects";
 import DashboardHeader from "../ui/dashboard/DashboardHeader";
 import ResultsPieCard from "../ui/dashboard/ResultsPieCard";
 import RunsTable from "../ui/dashboard/RunsTable";
+import useDashboardData from "../hooks/useDashboardData";
 
 /**
  * DashboardPage
- * Assembles dashboard components using mock data for immediate UI verification.
+ * Assembles dashboard components using mock API data (via useDashboardData hook).
  * Components are kept data-agnostic by passing props and callbacks.
  */
 
 // PUBLIC_INTERFACE
 export default function DashboardPage() {
-  /** Dashboard route "/" page layout composed of mock-friendly dashboard components. */
+  /** Dashboard route "/" page layout driven by the mock-aware useDashboardData hook. */
 
-  const projects = useMemo(
-    () => [
-      {
-        id: "proj-1",
-        name: "Warehouse Regression",
-        description: "Nightly E2E suite",
-        lastRunAt: "2025-12-30T19:12:00Z",
-      },
-      {
-        id: "proj-2",
-        name: "Robot Arm Calibration",
-        description: "Calibration validations",
-        lastRunAt: "2025-12-30T16:40:00Z",
-      },
-      {
-        id: "proj-3",
-        name: "Navigation Smoke",
-        description: "Quick smoke checks",
-        lastRunAt: "2025-12-29T09:05:00Z",
-      },
-    ],
-    []
-  );
-
-  const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?.id ?? null);
-  const selectedProject = useMemo(
-    () => projects.find((p) => p.id === selectedProjectId) ?? null,
-    [projects, selectedProjectId]
-  );
-
-  const statusSummary = useMemo(
-    () => ({
-      passed: 18,
-      failed: 3,
-      running: 2,
-      queued: 1,
-    }),
-    []
-  );
-
-  const runs = useMemo(
-    () => [
-      {
-        id: "run-1024",
-        suite: "e2e/warehouse",
-        status: "passed",
-        startedAt: "2025-12-30T19:12:00Z",
-        durationSeconds: 562,
-        triggeredBy: "scheduler",
-      },
-      {
-        id: "run-1023",
-        suite: "e2e/warehouse",
-        status: "failed",
-        startedAt: "2025-12-30T16:40:00Z",
-        durationSeconds: 611,
-        triggeredBy: "alex",
-      },
-      {
-        id: "run-1022",
-        suite: "smoke/navigation",
-        status: "running",
-        startedAt: "2025-12-30T16:10:00Z",
-        durationSeconds: 190,
-        triggeredBy: "api",
-      },
-      {
-        id: "run-1021",
-        suite: "calibration/arm",
-        status: "passed",
-        startedAt: "2025-12-29T09:05:00Z",
-        durationSeconds: 312,
-        triggeredBy: "sam",
-      },
-      {
-        id: "run-1020",
-        suite: "calibration/arm",
-        status: "queued",
-        startedAt: "2025-12-29T08:59:00Z",
-        durationSeconds: null,
-        triggeredBy: "scheduler",
-      },
-    ],
-    []
-  );
-
-  const [isStarting, setIsStarting] = useState(false);
-
-  const handleStartTest = async () => {
-    // Placeholder action that is mock-friendly and can be wired to a real API later.
-    if (isStarting) return;
-    setIsStarting(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      // no-op: success UX can be added later
-    } finally {
-      setIsStarting(false);
-    }
-  };
+  const {
+    projects,
+    selectedProjectId,
+    selectedProject,
+    summary,
+    runs,
+    isLoadingProjects,
+    isLoadingSummary,
+    isLoadingRuns,
+    isStarting,
+    error,
+    selectProject,
+    startTestRun,
+    refresh,
+    openLogs,
+  } = useDashboardData();
 
   return (
     <section className="dashboardPage" aria-label="Dashboard page">
@@ -126,16 +44,31 @@ export default function DashboardPage() {
         }
         rightActions={[
           {
-            id: "filters",
-            label: "Filters",
+            id: "refresh",
+            label: "Refresh",
             variant: "secondary",
-            onClick: () => {
-              // placeholder
-              window.alert("Filters will be added in a later step.");
-            },
+            onClick: refresh,
+            disabled: isLoadingProjects || isLoadingRuns || isLoadingSummary,
           },
         ]}
       />
+
+      {error ? (
+        <div
+          className="surface card"
+          role="alert"
+          aria-label="Dashboard error"
+          style={{ marginBottom: 24 }}
+        >
+          <div className="cardHeader">
+            <h2 className="h2">Something went wrong</h2>
+            <span className="badge badgeError">Error</span>
+          </div>
+          <div className="cardBody">
+            <div className="muted">{error}</div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="dashboardGrid" aria-label="Dashboard layout grid">
         <aside className="dashboardSidebar" aria-label="Projects sidebar">
@@ -143,8 +76,8 @@ export default function DashboardPage() {
             title="Projects"
             projects={projects}
             selectedProjectId={selectedProjectId}
-            onSelectProject={setSelectedProjectId}
-            emptyStateLabel="No projects available."
+            onSelectProject={selectProject}
+            emptyStateLabel={isLoadingProjects ? "Loading projects…" : "No projects available."}
           />
         </aside>
 
@@ -153,11 +86,11 @@ export default function DashboardPage() {
             <div className="dashboardTopCenter" aria-label="Run status summary">
               <ResultsPieCard
                 title="Run Status"
-                subtitle="Last 24 hours (mock)"
-                summary={statusSummary}
-                isLoading={false}
+                subtitle={selectedProject ? "Latest (mock)" : "Select a project to see status"}
+                summary={summary}
+                isLoading={isLoadingSummary}
                 onLegendItemClick={(key) => {
-                  // placeholder to show interaction; real filtering later
+                  // Placeholder for filtering by status; keep it interactive for now.
                   window.alert(`Clicked legend item: ${key}`);
                 }}
               />
@@ -171,12 +104,13 @@ export default function DashboardPage() {
                 </div>
                 <div className="cardBody">
                   <div className="muted">
-                    Start a new run for the selected project. (Mock action only.)
+                    Start a new run for the selected project. Runs update optimistically and then
+                    refresh.
                   </div>
                   <button
                     type="button"
                     className="btn btn-primary dashboardStartBtn"
-                    onClick={handleStartTest}
+                    onClick={startTestRun}
                     disabled={isStarting || !selectedProjectId}
                     aria-busy={isStarting ? "true" : "false"}
                   >
@@ -193,13 +127,19 @@ export default function DashboardPage() {
           <div className="dashboardBottomRow" aria-label="Recent runs table">
             <RunsTable
               title="Recent Test History"
-              subtitle="Most recent runs (mock)"
+              subtitle={selectedProject ? "Most recent runs (mock)" : "Select a project to view runs"}
               rows={runs}
-              isLoading={false}
-              emptyStateLabel="No runs yet."
+              isLoading={isLoadingRuns}
+              emptyStateLabel={
+                selectedProjectId
+                  ? isLoadingRuns
+                    ? "Loading runs…"
+                    : "No runs yet."
+                  : "No project selected."
+              }
               onRowClick={(row) => {
-                // placeholder
-                window.alert(`Open run details: ${row.id}`);
+                // For now: open logs in a new tab (works for mock URLs too).
+                openLogs(row);
               }}
             />
           </div>
