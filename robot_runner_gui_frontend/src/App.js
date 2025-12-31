@@ -1,26 +1,22 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
+import { NavLink, Route, Routes } from "react-router-dom";
+import DashboardPage from "./pages/DashboardPage";
 import "./App.css";
 
 /**
- * Mock navigation for the left sidebar. We keep this local for Step 1
- * and will expand it in later steps as routes/pages are introduced.
+ * Sidebar navigation items.
+ * We keep other routes as placeholders for now; only "/" is implemented in this step.
  */
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard" },
-  { id: "runs", label: "Test Runs" },
-  { id: "suites", label: "Suites" },
-  { id: "settings", label: "Settings" },
+  { id: "dashboard", label: "Dashboard", to: "/" },
+  { id: "runs", label: "Test Runs", to: "/runs" },
+  { id: "suites", label: "Suites", to: "/suites" },
+  { id: "settings", label: "Settings", to: "/settings" },
 ];
 
 // PUBLIC_INTERFACE
 function App() {
-  /** Selected sidebar tab (mock state for now). */
-  const [activeNav, setActiveNav] = useState("dashboard");
-
-  const activeLabel = useMemo(() => {
-    const item = NAV_ITEMS.find((n) => n.id === activeNav);
-    return item ? item.label : "Dashboard";
-  }, [activeNav]);
+  const activeLabel = useMemo(() => "Dashboard", []);
 
   return (
     <div className="appShell">
@@ -36,25 +32,25 @@ function App() {
         <div className="navSectionTitle">Navigation</div>
 
         <nav className="nav">
-          {NAV_ITEMS.map((item) => {
-            const isActive = item.id === activeNav;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={`navItem ${isActive ? "navItemActive" : ""}`}
-                onClick={() => setActiveNav(item.id)}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <span className="navItemLabel">
-                  <span className="navDot" aria-hidden="true" />
-                  {item.label}
-                </span>
-
-                {isActive && <span className="chip">Active</span>}
-              </button>
-            );
-          })}
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.id}
+              to={item.to}
+              end={item.to === "/"}
+              className={({ isActive }) =>
+                `navItem ${isActive ? "navItemActive" : ""}`
+              }
+              aria-label={item.label}
+            >
+              <span className="navItemLabel">
+                <span className="navDot" aria-hidden="true" />
+                {item.label}
+              </span>
+              <span className="chip" aria-hidden="true">
+                Link
+              </span>
+            </NavLink>
+          ))}
         </nav>
 
         <div className="navSectionTitle">Status</div>
@@ -92,51 +88,25 @@ function App() {
           </div>
         </header>
 
-        <section className="contentGrid" aria-label="Dashboard content">
-          <article className="surface card" aria-label="Run status chart">
-            <div className="cardHeader">
-              <h2 className="h2">Run Status</h2>
-              <span className="muted">Last 7 days (mock)</span>
-            </div>
-            <div className="cardBody">
-              <div className="placeholderChart skeleton" aria-hidden="true" />
-              <div className="muted">
-                Placeholder for pie chart (implemented in next step).
-              </div>
-            </div>
-          </article>
-
-          <article className="surface card" aria-label="Quick actions">
-            <div className="cardHeader">
-              <h2 className="h2">Quick Actions</h2>
-              <span className="muted">Mock</span>
-            </div>
-            <div className="cardBody">
-              <div className="muted">
-                This area will hold run controls and summary stats.
-              </div>
-              <div className="chip">Selected suite: (placeholder)</div>
-              <div className="chip">Environment: (placeholder)</div>
-            </div>
-          </article>
-
-          <article
-            className="surface card"
-            style={{ gridColumn: "1 / -1" }}
-            aria-label="Recent history"
-          >
-            <div className="cardHeader">
-              <h2 className="h2">Recent Test History</h2>
-              <span className="muted">Mock table</span>
-            </div>
-            <div className="cardBody">
-              <div className="placeholderTable skeleton" aria-hidden="true" />
-              <div className="muted">
-                Placeholder for history table (implemented in next step).
-              </div>
-            </div>
-          </article>
-        </section>
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route
+            path="*"
+            element={
+              <section className="surface card" aria-label="Placeholder route">
+                <div className="cardHeader">
+                  <h2 className="h2">Coming soon</h2>
+                  <span className="muted">Placeholder</span>
+                </div>
+                <div className="cardBody">
+                  <div className="muted">
+                    This route is not implemented yet. Use the Dashboard for now.
+                  </div>
+                </div>
+              </section>
+            }
+          />
+        </Routes>
       </main>
     </div>
   );
