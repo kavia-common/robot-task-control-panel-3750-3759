@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import SidebarProjects from "../ui/dashboard/SidebarProjects";
 import DashboardHeader from "../ui/dashboard/DashboardHeader";
 import ResultsPieCard from "../ui/dashboard/ResultsPieCard";
@@ -32,11 +32,21 @@ export default function DashboardPage() {
     openLogs,
   } = useDashboardData();
 
+  const isBusy = isLoadingProjects || isLoadingRuns || isLoadingSummary;
+
+  const startButtonHelp = useMemo(() => {
+    if (!selectedProjectId) return "Select a project to enable Start Test.";
+    if (isStarting) return "Starting a new run. A queued run will appear immediately.";
+    return "Starts a new run for the selected project.";
+  }, [isStarting, selectedProjectId]);
+
   return (
     <section className="dashboardPage" aria-label="Dashboard page">
       <DashboardHeader
         title="Test Automation Dashboard"
-        subtitle={selectedProject ? `Project: ${selectedProject.name}` : "Select a project"}
+        subtitle={
+          selectedProject ? `Project: ${selectedProject.name}` : "Select a project"
+        }
         meta={
           selectedProject
             ? `Last run: ${new Date(selectedProject.lastRunAt).toLocaleString()}`
@@ -45,10 +55,10 @@ export default function DashboardPage() {
         rightActions={[
           {
             id: "refresh",
-            label: "Refresh",
+            label: isBusy ? "Refreshing…" : "Refresh",
             variant: "secondary",
             onClick: refresh,
-            disabled: isLoadingProjects || isLoadingRuns || isLoadingSummary,
+            disabled: isBusy,
           },
         ]}
       />
@@ -65,7 +75,26 @@ export default function DashboardPage() {
             <span className="badge badgeError">Error</span>
           </div>
           <div className="cardBody">
-            <div className="muted">{error}</div>
+            <div className="errorCallout" aria-label="Error details">
+              {error}
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={refresh}
+                disabled={isBusy}
+              >
+                {isBusy ? (
+                  <>
+                    <span className="spinner spinner-dark" aria-hidden="true" />
+                    Retrying…
+                  </>
+                ) : (
+                  "Retry"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -77,7 +106,12 @@ export default function DashboardPage() {
             projects={projects}
             selectedProjectId={selectedProjectId}
             onSelectProject={selectProject}
-            emptyStateLabel={isLoadingProjects ? "Loading projects…" : "No projects available."}
+            isLoading={isLoadingProjects}
+            error={error}
+            onRetry={refresh}
+            emptyStateLabel={
+              isLoadingProjects ? "Loading projects…" : "No projects available."
+            }
           />
         </aside>
 
@@ -89,6 +123,8 @@ export default function DashboardPage() {
                 subtitle={selectedProject ? "Latest (mock)" : "Select a project to see status"}
                 summary={summary}
                 isLoading={isLoadingSummary}
+                error={error}
+                onRetry={refresh}
                 onLegendItemClick={(key) => {
                   // Placeholder for filtering by status; keep it interactive for now.
                   window.alert(`Clicked legend item: ${key}`);
@@ -107,15 +143,29 @@ export default function DashboardPage() {
                     Start a new run for the selected project. Runs update optimistically and then
                     refresh.
                   </div>
+
                   <button
                     type="button"
                     className="btn btn-primary dashboardStartBtn"
                     onClick={startTestRun}
                     disabled={isStarting || !selectedProjectId}
+                    aria-disabled={isStarting || !selectedProjectId ? "true" : "false"}
                     aria-busy={isStarting ? "true" : "false"}
+                    aria-describedby="startTestHelp"
                   >
-                    {isStarting ? "Starting…" : "Start Test"}
+                    {isStarting ? (
+                      <>
+                        <span className="spinner" aria-hidden="true" />
+                        Starting…
+                      </>
+                    ) : (
+                      "Start Test"
+                    )}
                   </button>
+                  <div id="startTestHelp" className="srOnly">
+                    {startButtonHelp}
+                  </div>
+
                   <div className="chip" role="status" aria-label="Selected project chip">
                     {selectedProject ? `Selected: ${selectedProject.name}` : "Select a project"}
                   </div>
@@ -130,6 +180,8 @@ export default function DashboardPage() {
               subtitle={selectedProject ? "Most recent runs (mock)" : "Select a project to view runs"}
               rows={runs}
               isLoading={isLoadingRuns}
+              error={error}
+              onRetry={refresh}
               emptyStateLabel={
                 selectedProjectId
                   ? isLoadingRuns

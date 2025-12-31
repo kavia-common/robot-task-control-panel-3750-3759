@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage";
 import "./App.css";
 
@@ -17,55 +17,91 @@ const NAV_ITEMS = [
 // PUBLIC_INTERFACE
 function App() {
   const activeLabel = useMemo(() => "Dashboard", []);
+  const location = useLocation();
+
+  // Collapsible sidebar: collapsed by default on small screens via CSS.
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const sidebarId = "primary-navigation-sidebar";
 
   return (
     <div className="appShell">
-      <aside className="sidebar" aria-label="Primary navigation">
-        <div className="brand" aria-label="Application brand">
-          <div className="brandMark" aria-hidden="true" />
-          <div className="brandTitle">
-            <strong>Robot Runner</strong>
-            <span>Test Automation</span>
+      <aside
+        id={sidebarId}
+        className={`sidebar ${isSidebarOpen ? "sidebarExpanded" : ""}`}
+        aria-label="Primary navigation"
+      >
+        <div className="sidebarHeaderRow">
+          <div className="brand" aria-label="Application brand">
+            <div className="brandMark" aria-hidden="true" />
+            <div className="brandTitle">
+              <strong>Robot Runner</strong>
+              <span>Test Automation</span>
+            </div>
           </div>
+
+          <button
+            type="button"
+            className="sidebarToggleBtn"
+            aria-controls={sidebarId}
+            aria-expanded={isSidebarOpen ? "true" : "false"}
+            onClick={() => setIsSidebarOpen((v) => !v)}
+          >
+            <span aria-hidden="true">{isSidebarOpen ? "Close" : "Menu"}</span>
+            <span className="srOnly">
+              {isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            </span>
+          </button>
         </div>
 
-        <div className="navSectionTitle">Navigation</div>
+        <div className="sidebarContent" aria-label="Sidebar content">
+          <div className="navSectionTitle">Navigation</div>
 
-        <nav className="nav">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.id}
-              to={item.to}
-              end={item.to === "/"}
-              className={({ isActive }) =>
-                `navItem ${isActive ? "navItemActive" : ""}`
-              }
-              aria-label={item.label}
-            >
-              <span className="navItemLabel">
-                <span className="navDot" aria-hidden="true" />
-                {item.label}
-              </span>
-              <span className="chip" aria-hidden="true">
-                Link
-              </span>
-            </NavLink>
-          ))}
-        </nav>
+          <nav className="nav">
+            {NAV_ITEMS.map((item) => (
+              <NavLink
+                key={item.id}
+                to={item.to}
+                end={item.to === "/"}
+                className={({ isActive }) =>
+                  `navItem ${isActive ? "navItemActive" : ""}`
+                }
+                aria-label={item.label}
+                onClick={() => {
+                  // On mobile, close sidebar after navigation for better UX.
+                  setIsSidebarOpen(false);
+                }}
+              >
+                <span className="navItemLabel">
+                  <span className="navDot" aria-hidden="true" />
+                  {item.label}
+                </span>
+                <span className="chip" aria-hidden="true">
+                  Link
+                </span>
+              </NavLink>
+            ))}
+          </nav>
 
-        <div className="navSectionTitle">Status</div>
-        <div className="chip" role="status" aria-label="Backend connection status">
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 999,
-              background: "rgba(107, 114, 128, 0.7)",
-              display: "inline-block",
-            }}
-            aria-hidden="true"
-          />
-          Mock mode (no backend)
+          <div className="navSectionTitle">Status</div>
+          <div className="chip" role="status" aria-label="Backend connection status">
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 999,
+                background: "rgba(107, 114, 128, 0.7)",
+                display: "inline-block",
+              }}
+              aria-hidden="true"
+            />
+            Mock mode (no backend)
+          </div>
+
+          <div className="navSectionTitle">Context</div>
+          <div className="muted" style={{ fontSize: 12 }}>
+            Route: <span className="mono">{location.pathname}</span>
+          </div>
         </div>
       </aside>
 
