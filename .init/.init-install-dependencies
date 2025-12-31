@@ -1,0 +1,4 @@
+{
+    "command": "npm install",
+    "working_directory": "/home/kavia/workspace/code-generation/robot-task-control-panel-3750-3759/robot_runner_gui_frontend"
+}
