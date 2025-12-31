@@ -70,26 +70,8 @@ function App() {
       </aside>
 
       <main className="main">
-        <header className="header">
-          <div className="headerLeft">
-            <h1 className="h1">Test Automation Dashboard</h1>
-            <div className="muted">
-              Viewing: <strong>{activeLabel}</strong>
-            </div>
-          </div>
-
-          <div className="headerRight">
-            <button type="button" className="btn btn-secondary">
-              Filters (placeholder)
-            </button>
-            <button type="button" className="btn btn-primary">
-              Start Test (placeholder)
-            </button>
-          </div>
-        </header>
-
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<DashboardPage activeLabel={activeLabel} />} />
           <Route
             path="*"
             element={
